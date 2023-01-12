@@ -9,17 +9,15 @@ import tensorflow as tf
 tf.get_logger().setLevel("INFO")
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
-import random
 import argparse
-
-from stable_baselines import logger
-from stable_baselines.common import set_global_seeds
-
-from utils.files import load_model, write_results
-from utils.register import get_environment
-from utils.agents import Agent
+import random
 
 import config
+from stable_baselines import logger
+from stable_baselines.common import set_global_seeds
+from utils.agents import Agent
+from utils.files import load_model, write_results
+from utils.register import get_environment
 
 
 def main(args):

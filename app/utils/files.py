@@ -1,21 +1,17 @@
-import os
-import sys
-import random
 import csv
+import os
+import random
+import sys
 import time
-import numpy as np
-
-from mpi4py import MPI
-
 from shutil import rmtree
-from stable_baselines.ppo1 import PPO1
-from stable_baselines.common.policies import MlpPolicy
-
-from utils.register import get_network_arch
 
 import config
-
+import numpy as np
+from mpi4py import MPI
 from stable_baselines import logger
+from stable_baselines.common.policies import MlpPolicy
+from stable_baselines.ppo1 import PPO1
+from utils.register import get_network_arch
 
 
 def write_results(players, game, games, episode_length):

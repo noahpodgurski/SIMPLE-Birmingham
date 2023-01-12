@@ -1,14 +1,12 @@
 import os
-import numpy as np
 from shutil import copyfile
-from mpi4py import MPI
-
-from stable_baselines.common.callbacks import EvalCallback
-from stable_baselines import logger
-
-from utils.files import get_best_model_name, get_model_stats
 
 import config
+import numpy as np
+from mpi4py import MPI
+from stable_baselines import logger
+from stable_baselines.common.callbacks import EvalCallback
+from utils.files import get_best_model_name, get_model_stats
 
 
 class SelfPlayCallback(EvalCallback):

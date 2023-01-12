@@ -1,13 +1,11 @@
 import os
-import numpy as np
 import random
 
-from utils.files import load_model, load_all_models, get_best_model_name
-from utils.agents import Agent
-
 import config
-
+import numpy as np
 from stable_baselines import logger
+from utils.agents import Agent
+from utils.files import get_best_model_name, load_all_models, load_model
 
 
 def selfplay_wrapper(env):

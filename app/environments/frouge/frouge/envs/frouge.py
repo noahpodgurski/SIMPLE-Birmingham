@@ -1,16 +1,13 @@
-import gym
-import numpy as np
-
 import random
 from functools import cmp_to_key
 
 import config
-
+import gym
+import numpy as np
 from stable_baselines import logger
 from stable_baselines.common import set_global_seeds
 
 from .classes import *
-
 
 PLAYER_COLOR_MAP = {
     "1": "91",

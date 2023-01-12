@@ -13,21 +13,18 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import argparse
 import time
 from shutil import copyfile
-from mpi4py import MPI
-
-from stable_baselines.ppo1 import PPO1
-from stable_baselines.common.callbacks import EvalCallback
-
-from stable_baselines.common.vec_env import DummyVecEnv
-from stable_baselines.common import set_global_seeds
-from stable_baselines import logger
-
-from utils.callbacks import SelfPlayCallback
-from utils.files import reset_logs, reset_models
-from utils.register import get_network_arch, get_environment
-from utils.selfplay import selfplay_wrapper
 
 import config
+from mpi4py import MPI
+from stable_baselines import logger
+from stable_baselines.common import set_global_seeds
+from stable_baselines.common.callbacks import EvalCallback
+from stable_baselines.common.vec_env import DummyVecEnv
+from stable_baselines.ppo1 import PPO1
+from utils.callbacks import SelfPlayCallback
+from utils.files import reset_logs, reset_models
+from utils.register import get_environment, get_network_arch
+from utils.selfplay import selfplay_wrapper
 
 
 def main(args):

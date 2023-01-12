@@ -1,9 +1,8 @@
-import gym
-import numpy as np
 import random
 
 import config
-
+import gym
+import numpy as np
 from stable_baselines import logger
 
 from .classes import *

@@ -1,10 +1,8 @@
 # Adapted from https://mblogscode.com/2016/06/03/python-naughts-crossestic-tac-toe-coding-unbeatable-ai/
 
+import config
 import gym
 import numpy as np
-
-import config
-
 from stable_baselines import logger
 
 
