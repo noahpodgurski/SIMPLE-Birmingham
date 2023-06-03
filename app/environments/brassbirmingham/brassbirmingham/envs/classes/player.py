@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from .board import Board
@@ -8,9 +8,9 @@ if TYPE_CHECKING:
 import copy
 import math
 
-from classes.buildings.enums import BuildingType
+from classes.buildings.enums import BuildingType, BuildingName
 from classes.cards.card import Card
-from classes.cards.enums import CardName
+from classes.cards.enums import CardName, CardType
 from classes.enums import Era
 from classes.cards.industry_card import IndustryCard
 from classes.cards.location_card import LocationCard
@@ -59,6 +59,11 @@ class Player:
     def pay(self, amount: int):
         self.money -= amount
         assert self.money >= 0
+    def isCardInHand(self, card: Card):
+        for c in self.hand.cards:
+            if c.id == card.id:
+                return True
+        return False
 
     def incomeLevel(self):
         if self.income <= 10:
@@ -147,8 +152,15 @@ class Player:
             return False
         if building.onlyPhaseTwo and self.board.era != Era.railroad:
             return False
+        
+        for b in self.buildings:
+            if b.name == building.name and building.town is None and b.tier < building.tier:
+                # Cannot build building above unbuilt min tier
+                return False
 
+        
         return buildLocation.isPossibleBuild(building)
+
 
     def totalBuildingCost(
         self, building: Building, coalCost: int, ironCost: int
@@ -231,9 +243,8 @@ class Player:
     probably useful to separate into canX and doX functions for generating state and possible action array (?)"""
     # 1 BUILD
     def canBuildBuilding(
-        self, building: Building, buildLocation: BuildLocation
+        self, building: Building, buildLocation: BuildLocation, discard: Card,
     ) -> bool:
-
         if self.board.era == Era.canal:
             # You may have a maximum of 1 Industry tile per location in Canal era
             for buildLocation_ in buildLocation.town.buildLocations:
@@ -241,48 +252,59 @@ class Player:
                     if buildLocation_.building and buildLocation_.building.owner.id == self.id:
                         return False
 
-        print(
-            self.canAffordBuildingIndustryResources(
-                buildLocation, building
-            ), self.canAffordBuilding(building), self.canPlaceBuilding(building, buildLocation), building.owner == self
-        )
-        return (
-            self.canAffordBuildingIndustryResources(
-                buildLocation, building
+        if not (self.canAffordBuildingIndustryResources(
+                buildLocation, building.coalCost, building.ironCost
             )
             and self.canAffordBuilding(building)
-            and self.canPlaceBuilding(building, buildLocation)
-            and building.owner == self
-        )
+            and self.canPlaceBuilding(building, buildLocation, discard)
+            and building.owner == self and self.isCardInHand(discard)):
+            return False
+
+        cardNameToBuildingName = {
+            CardName.iron_works: BuildingName.iron,
+            CardName.coal_mine: BuildingName.coal,
+            CardName.brewery: BuildingName.beer,
+            CardName.pottery: BuildingName.pottery,
+            CardName.man_goods_or_cotton: BuildingName.goods,
+        }
+        if discard.type == CardType.location and (discard.name == buildLocation.town.name or discard.isWild):
+            return True
+        elif discard.type == CardType.industry and (cardNameToBuildingName.get(discard.name) == building.name or discard.isWild):
+            return True
+               
+        return False
 
     # 2 NETWORK
-    def canBuildCanal(self, roadLocation: RoadLocation) -> bool:
+    def canBuildCanal(self, roadLocation: RoadLocation, discard: Card) -> bool:
         return (
             self.roadCount > 0
             and self.canAffordCanal()
             and self.canPlaceCanal(roadLocation)
+            and self.isCardInHand(discard)
         )
 
-    def canBuildOneRailroad(self, roadLocation: RoadLocation) -> bool:
+    def canBuildOneRailroad(self, roadLocation: RoadLocation, discard: Card) -> bool:
         return (
             self.roadCount > 0
             and self.canAffordOneRailroad()
             and self.canPlaceOneRailroad(roadLocation)
             and self.canAffordOneRailroadIndustryResources(roadLocation)
+            and self.isCardInHand(discard)
         )
 
     def canBuildTwoRailroads(
-        self, roadLocation1: RoadLocation, roadLocation2: RoadLocation
+        self, roadLocation1: RoadLocation, roadLocation2: RoadLocation, discard: Card
     ) -> bool:
         return (
             self.roadCount > 1
             and self.canAffordTwoRailroads()
             and self.canAffordTwoRailroadIndustryResources(roadLocation1, roadLocation2)
             and self.canPlaceTwoRailroads(roadLocation1, roadLocation2)
+            and self.isCardInHand(discard)
         )
 
     # 3 DEVELOP
-    def canDevelop(self, building1: Building, building2: Building) -> bool:
+    def canDevelop(self, building1: Building, building2: Building, discard: Card) -> bool:
         return (
             not building1.isActive
             and not building1.isRetired
@@ -292,91 +314,116 @@ class Player:
             and not building2.isRetired
             and building2.canBeDeveloped
             and building2.owner == self
+            and self.isCardInHand(discard)
         )
 
     # 4 SELL
-    def canSell(self, building: MarketBuilding) -> bool:
+    def canSell(self, building: MarketBuilding, discard: Card) -> bool:
         return (
             building.isActive
             and building.owner == self
             and self.canAffordSellBuilding(building)
+            and self.isCardInHand(discard)
         )
 
     # 5 LOAN
-    def canLoan(self) -> bool:
-        return self.income >= 3
+    def canLoan(self, discard) -> bool:
+        return self.incomeLevel() >= 3 and self.isCardInHand(discard)
 
     # 6 SCOUT
-    def canScout(self, additionalDiscard: Card) -> bool:
-        ownership = False
+    def canScout(self, discard: Card, additionalDiscards: List[Card]) -> bool:
+        assert len(additionalDiscards) == 2
+
+        if not self.isCardInHand(discard):
+            return False
+        for card in additionalDiscards:
+            if not self.isCardInHand(card):
+                return False
+
         for card in self.hand.cards:
             if card.name in [CardName.wild_location, CardName.wild_industry]:
                 # No scouting if player has at least 1 wild card already
                 return False
-            if card.id == additionalDiscard.id:
-                ownership = True
 
-        return ownership
-
-    # 7 PASS
-    def canPassTurn(self) -> bool:
         return True
+    
+    # 7 PASS
+    def canPassTurn(self, discard: Card) -> bool:
+        return self.isCardInHand(discard)
 
     """Actions"""
-    # todo player discarding for actions
     # 1 BUILD
-    def buildBuilding(self, building: Building, buildLocation: BuildLocation):
-        assert self.canBuildBuilding(building, buildLocation)
+    def buildBuilding(self, building: Building, buildLocation: BuildLocation, discard: Card):
+        assert self.canBuildBuilding(building, buildLocation, discard)
         # if overbuilding
         if buildLocation.building:
             buildLocation.building.isActive = False
             buildLocation.building.isRetired = True
+
         building.build(buildLocation)
         self.board.buildBuilding(building, buildLocation, self)
+        self.hand.spendCard(discard)
+        self.hand.draw()
 
     # 2 NETWORK
-    def buildCanal(self, roadLocation: RoadLocation):
+    def buildCanal(self, roadLocation: RoadLocation, discard: Card):
         assert self.canBuildCanal(roadLocation)
         self.board.buildCanal(roadLocation, self)
+        self.hand.spendCard(discard)
+        self.hand.draw()
 
-    def buildOneRailroad(self, roadLocation: RoadLocation):
+    def buildOneRailroad(self, roadLocation: RoadLocation, discard: Card):
         assert self.canBuildOneRailroad(roadLocation)
         self.board.buildOneRailroad(roadLocation, self)
+        self.hand.spendCard(discard)
+        self.hand.draw()
 
     def buildTwoRailroads(
-        self, roadLocation1: RoadLocation, roadLocation2: RoadLocation
+        self, roadLocation1: RoadLocation, roadLocation2: RoadLocation, discard: Card
     ):
         assert self.canBuildTwoRailroads(roadLocation1, roadLocation2)
         self.board.buildTwoRailroads(roadLocation1, roadLocation2, self)
+        self.hand.spendCard(discard)
+        self.hand.draw()
 
     # 3 DEVELOP
-    def develop(self, building1: Building, building2: Building):
+    def develop(self, building1: Building, building2: Building, discard: Card):
         assert self.canDevelop(building1, building2)
         building1.isRetired = True
         building2.isRetired = True
+        self.hand.spendCard(discard)
+        self.hand.draw()
 
     # 4 SELL
-    def sell(self, building: MarketBuilding):
+    def sell(self, building: MarketBuilding, discard: Card):
         assert self.canSell(building)
         self.board.sellBuilding(building, self)
+        self.hand.spendCard(discard)
+        self.hand.draw()
 
     # 5 LOAN
-    def loan(self):
+    def loan(self, discard: Card):
         assert self.canLoan()
         self.decreaseIncomeLevel(3)
         self.money += 30
+        self.hand.spendCard(discard)
+        self.hand.draw()
 
     # 6 SCOUT
-    def scout(self, additionalDiscard: Card):
-        assert self.canScout(additionalDiscard)
+    def scout(self, discard: Card, additionalDiscards: List[Card]):
+        assert self.canScout(additionalDiscards)
         self.hand.add(LocationCard(name=CardName.wild_location))
         self.hand.add(IndustryCard(name=CardName.wild_industry))
-        self.hand.spendCard(additionalDiscard)
+        for card in additionalDiscards:
+            self.hand.spendCard(card)
+        self.hand.spendCard(discard)
+        self.hand.draw()
 
     # 7 PASS
-    def passTurn(self):
-        assert self.canPassTurn()
-        return
+    def passTurn(self, discard: Card):
+        assert self.canPassTurn(discard)
+        self.hand.spendCard(discard)
+        self.hand.draw()
 
     def __repr__(self) -> str:
         return self.name

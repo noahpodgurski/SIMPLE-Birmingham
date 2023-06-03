@@ -25,8 +25,7 @@ class Deck:
     def draw(self):
         if len(self.cards) > 0:
             return self.cards.pop()
-        else:
-            self.reset()
+        return None
 
     def reset(self):
         self.cards = self.discardPile

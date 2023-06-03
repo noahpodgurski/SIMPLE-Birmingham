@@ -18,11 +18,13 @@ class Hand:
         self.deck = deck
 
     def draw(self):
-        self.cards.append(self.deck.draw())
+        newCard = self.deck.draw()
+        if newCard is not None:
+            self.cards.append(newCard)
 
     def spendCard(self, card: Card):
         self.cards = list(
-            filter(lambda x: x.id != card.self.cards, self.cards)
+            filter(lambda x: x.id != card.id, self.cards)
         )  # remove that card from hand
         self.deck.discardPile.append(card)
 
