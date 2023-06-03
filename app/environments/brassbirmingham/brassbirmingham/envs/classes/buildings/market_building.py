@@ -52,7 +52,6 @@ class MarketBuilding(Building):
         self.beerCost = beerCost
 
     def sell(self):
-        self.buildLocation = None
         self.isActive = False
         self.isSold = True
         self.town = None
