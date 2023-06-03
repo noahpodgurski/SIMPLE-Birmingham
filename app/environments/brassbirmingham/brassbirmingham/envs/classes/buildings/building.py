@@ -82,3 +82,4 @@ class Building:
 
     def __repr__(self) -> str:
         return f"\nBuilding {self.tier}:{self.name}:: Owner: {self.owner}, Bought: {self.isActive}, Sold: {self.isSold} Retired: {self.isRetired}"
+    

@@ -276,15 +276,6 @@ TRADEPOSTS: Dict[int, List[TradePost]] = {
     ]
 }
 
-
-# TRADEPOSTS: List[TradePost] = [
-#     TradePost(WARRINGTON, 2, 3, 5, 0, 0, 2, False),
-#     TradePost(NOTTINGHAM, 2, 4, 0, 3, 0, 2, False),
-#     TradePost(SHREWBURY, 1, 2, 0, 4, 0, 2, False),
-#     TradePost(OXFORD, 2, 2, 0, 0, 2, 2, False),
-#     TradePost(GLOUCESTER, 2, 2, 0, 0, 2, 2, True),
-# ]
-
 ROAD_LOCATIONS: List[RoadLocation] = [
     RoadLocation([WARRINGTON, STOKE_ON_TRENT]),
     RoadLocation([STOKE_ON_TRENT, LEEK]),
