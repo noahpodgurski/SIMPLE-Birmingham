@@ -152,14 +152,19 @@ class Player:
             return False
         if building.onlyPhaseTwo and self.board.era != Era.railroad:
             return False
-        
+
+        isValidBuild = False        
         for b in self.buildings:
-            if b.name == building.name and building.town is None and b.tier < building.tier:
-                # Cannot build building above unbuilt min tier
-                return False
+            if b.name == building.name:
+                if building.town is None and b.tier < building.tier:
+                    # Cannot build building above unbuilt min tier
+                    return False
+                if building.town is None and b.tier == building.tier:
+                    # Cannot build building if all of your copies of it have already been built
+                    isValidBuild = True
 
         
-        return buildLocation.isPossibleBuild(building)
+        return isValidBuild and buildLocation.isPossibleBuild(building)
 
 
     def totalBuildingCost(
