@@ -21,8 +21,6 @@ class Test(unittest.TestCase):
 
         if numPlayers > 2:
             self.p3 = Player("Sam", self.board)
-        
-            self.board.tradePosts[0].beerAmount
         if numPlayers > 3:
             self.p4 = Player("Mr. Mcdonald", self.board)
 
