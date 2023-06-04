@@ -188,7 +188,7 @@ class Board:
                 if _available.type == "TradePost":
                     cost = self.priceForCoal(X)
                     player.pay(cost)
-                    self.coalMarketRemaining -= X
+                    self.coalMarketRemaining = max(self.coalMarketRemaining - X, 0)
                     return
                 else:
                     _available.decreaseResourceAmount(1)
