@@ -104,21 +104,20 @@ class Player:
         for _ in range(levels):
             decreaseLevel()
 
-    # pass "money" object
+    # pass "money" object (money remaining after spending on building cost)
     def canAffordBuildingIndustryResources(
-        self, buildLocation: BuildLocation, coalCost: int, ironCost: int, money: int
+        self, buildLocation: BuildLocation, coalCost: int, ironCost: int, moneyRemaining: int
     ) -> bool:
         #first check if that amount is available
-        return ((
+        return (
             self.board.isCoalAvailableFromBuildings(buildLocation.town)
             or self.board.isCoalAvailableFromTradePosts(
-                buildLocation.town, coalCost, money
+                buildLocation.town, coalCost, moneyRemaining
             )
         ) and (
             self.board.isIronAvailableFromBuildings()
-            or self.board.isIronAvailableFromTradePosts(ironCost, money)
-        # if not, check if player can afford
-        )) or (self.board.priceForCoal(coalCost) + self.board.priceForIron(ironCost) <= money)
+            or self.board.isIronAvailableFromTradePosts(ironCost, moneyRemaining)
+        )
 
     def canAffordBuilding(self, building: Building) -> bool:
         return self.money >= building.cost
@@ -222,13 +221,8 @@ class Player:
             for buildLocation_ in buildLocation.town.buildLocations:
                 if buildLocation_.id != buildLocation.id:
                     if buildLocation_.building and buildLocation_.building.owner.id == self.id:
-                        print("UH OH")
                         return False
 
-        print(
-            self.canAffordBuildingIndustryResources(
-                buildLocation, building.coalCost, building.ironCost, self.money-building.cost
-            ), self.canAffordBuilding(building), self.canPlaceBuilding(building, buildLocation), building.owner == self)
         return (
             self.canAffordBuildingIndustryResources(
                 buildLocation, building.coalCost, building.ironCost, self.money-building.cost

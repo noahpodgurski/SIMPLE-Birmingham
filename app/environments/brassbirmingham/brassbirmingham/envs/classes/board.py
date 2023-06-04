@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Dict, List
 from consts import (CANAL_PRICE, MAX_MARKET_COAL, MAX_MARKET_IRON,
                     ONE_RAILROAD_COAL_PRICE, ONE_RAILROAD_PRICE,
                     ROAD_LOCATIONS, STARTING_CARDS, STARTING_HAND_SIZE,
-                    STARTING_ROADS, TOWNS, TRADEPOSTS, TWO_RAILROAD_COAL_PRICE,
+                    STARTING_ROADS, TOWNS, TRADEPOSTS, TWO_RAILROAD_COAL_PRICE, TWO_RAILROAD_BEER_PRICE,
                     TWO_RAILROAD_PRICE, MERCHANT_TILES)
 from python.id import id
 from python.print_colors import *
@@ -209,7 +209,7 @@ class Board:
     def removeXIron(self, X: int, player: Player):
         availableIron = self.getAvailableIronBuildingsTradePosts()
         if len(availableIron) == 0:
-            return
+            raise ValueError("Attempted to remove Iron but no iron is available")
 
         _available = availableIron.pop(
             0
@@ -218,7 +218,7 @@ class Board:
             if _available.type == "TradePost":
                 cost = self.priceForIron(X)
                 player.pay(cost)
-                self.ironMarketRemaining -= X
+                self.ironMarketRemaining = max(self.ironMarketRemaining - X, 0)
                 return
             else:
                 _available.decreaseResourceAmount(1)
@@ -424,14 +424,12 @@ class Board:
         coalBuildings = self.getCoalBuildings()
         amount = 0
         for coalBuilding in coalBuildings:
-            print(f"self.areNetworked({town.name}, {coalBuilding.name}): {self.areNetworked(town, coalBuilding)}")
             if self.areNetworked(town, coalBuilding):
                 amount += coalBuilding.resourceAmount
         for tradePost in self.tradePosts:
             if self.areNetworked(town, tradePost):
                 amount += self.coalMarketRemaining
                 break
-        print(f"returns {amount=}")
         return amount
 
     """
@@ -452,13 +450,6 @@ class Board:
                 amount += tradePost.beerAmount
                 break
         return amount
-
-    """
-    isIronAvailable
-    
-    """
-    def isIronAvailable(self):
-        return True
 
     """
     getAvailableCoalBuildingsTradePosts
@@ -492,8 +483,7 @@ class Board:
         for ironBuilding in ironBuildings:
             l.append(ironBuilding)
         for tradePost in self.tradePosts:
-            if self.ironMarketRemaining > 0:
-                l.append(tradePost)
+            l.append(tradePost)
         return l
 
     """
@@ -560,7 +550,7 @@ class Board:
             player,
         )
         self.removeXBeer(
-            1,
+            TWO_RAILROAD_BEER_PRICE,
             [*roadLocation1.towns, *roadLocation2.towns],
             player
         )
