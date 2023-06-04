@@ -11,7 +11,6 @@
     * take beer from tradepost get bonus
     * check building being built is lowest tier available
     * add missing iron methods ? is done?
-    * overbuilding
  * Research state and stuff from SIMPLE
   * Add AI
  * Generate states

@@ -49,7 +49,8 @@ class BuildLocation:
     """
 
     def isPossibleBuild(self, building: Building):
-        return not self.building and building.name in self.possibleBuilds
+        #     there's (no building or overbuilding)                        and is actually buildable there
+        return (not self.building or self.building.tier < building.tier) and building.name in self.possibleBuilds
 
     def __str__(self) -> str:
         returnStr = "BuildingTile:|"

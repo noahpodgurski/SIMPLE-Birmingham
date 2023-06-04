@@ -61,7 +61,7 @@ class Building:
         self.isSold = False  # is sold/ran out of resources
         self.isActive = False  # is on the board i.e., not bought yet
         self.isRetired = (
-            False  # only used for retired buildings (tier 1's) in second phase
+            False  # only used for retired buildings (tier 1's) in second phase (pieces 'put back in the box')
         )
         self.isFlipped = False
 

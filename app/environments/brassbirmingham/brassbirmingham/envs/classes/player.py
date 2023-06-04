@@ -326,6 +326,10 @@ class Player:
     # 1 BUILD
     def buildBuilding(self, building: Building, buildLocation: BuildLocation):
         assert self.canBuildBuilding(building, buildLocation)
+        # if overbuilding
+        if buildLocation.building:
+            buildLocation.building.isActive = False
+            buildLocation.building.isRetired = True
         building.build(buildLocation)
         self.board.buildBuilding(building, buildLocation, self)
 

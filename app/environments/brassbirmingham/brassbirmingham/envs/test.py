@@ -378,6 +378,10 @@ class Test(unittest.TestCase):
         self.assertEqual(self.board.getAvailableBeerAmount(self.p1, self.board.townDict[UTTOXETER]), 0)
         self.assertEqual(self.board.getAvailableCoalAmount(self.board.townDict[UTTOXETER]), 0)
         
+        #overbuild
+        self.assertEqual(self.p1.canBuildBuilding(self.p1.buildingDict["beer 2"], self.board.townDict[UTTOXETER].buildLocations[0]), True)
+        self.p1.buildBuilding(self.p1.buildingDict["beer 2"], self.board.townDict[UTTOXETER].buildLocations[0])
+        
         render(self.board)
 
 
