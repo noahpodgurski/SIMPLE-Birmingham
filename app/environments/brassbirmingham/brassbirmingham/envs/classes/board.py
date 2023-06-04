@@ -467,8 +467,7 @@ class Board:
                 l.append(coalBuilding)
         for tradePost in self.tradePosts:
             if self.areNetworked(town, tradePost):
-                if self.coalMarketRemaining > 0:
-                    l.append(tradePost)
+                l.append(tradePost)
         return l
 
     """
