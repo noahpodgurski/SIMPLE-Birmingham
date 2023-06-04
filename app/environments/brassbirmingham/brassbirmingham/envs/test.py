@@ -25,8 +25,8 @@ class Test(unittest.TestCase):
             self.p4 = Player("Mr. Mcdonald", self.board)
 
         # randomize merchant tile init
-        for tradePost in self.board.tradePosts:
-            tradePost.addMerchantTile(self.board.merchantTiles.pop(random.randint(0, len(self.board.merchantTiles)-1)))
+        for i, tradePost in enumerate(self.board.tradePosts):
+            tradePost.addMerchantTile(self.board.merchantTiles[0])
 
         
 
