@@ -106,32 +106,33 @@ class Player:
 
     # pass "money" object (money remaining after spending on building cost)
     def canAffordBuildingIndustryResources(
-        self, buildLocation: BuildLocation, coalCost: int, ironCost: int, moneyRemaining: int
+        self, buildLocation: BuildLocation, building: Building
     ) -> bool:
         canAffordCoal = True
         canAffordIron = True
-        if coalCost > 0:
+        moneyRemaining = self.money - building.cost
+        if building.coalCost > 0:
             #first check if that amount is available
             canAffordCoal = (
                 self.board.isCoalAvailableFromBuildings(buildLocation.town)
                 or self.board.isCoalAvailableFromTradePosts(
-                    buildLocation.town, coalCost, moneyRemaining
+                    buildLocation.town, building.coalCost, moneyRemaining
                 )
             ) and (
                 self.board.isIronAvailableFromBuildings()
-                or self.board.isIronAvailableFromTradePosts(ironCost, moneyRemaining)
+                or self.board.isIronAvailableFromTradePosts(building.ironCost, moneyRemaining)
             )
 
-        if ironCost > 0:
+        if building.ironCost > 0:
             #first check if that amount is available
             canAffordIron = (
                 self.board.isIronAvailableFromBuildings()
                 or self.board.isIronAvailableFromTradePosts(
-                    ironCost, moneyRemaining
+                    building.ironCost, moneyRemaining
                 )
             ) and (
                 self.board.isIronAvailableFromBuildings()
-                or self.board.isIronAvailableFromTradePosts(ironCost, moneyRemaining)
+                or self.board.isIronAvailableFromTradePosts(building.ironCost, moneyRemaining)
             )
 
         return canAffordCoal and canAffordIron
@@ -242,12 +243,12 @@ class Player:
 
         print(
             self.canAffordBuildingIndustryResources(
-                buildLocation, building.coalCost, building.ironCost, self.money-building.cost
+                buildLocation, building
             ), self.canAffordBuilding(building), self.canPlaceBuilding(building, buildLocation), building.owner == self
         )
         return (
             self.canAffordBuildingIndustryResources(
-                buildLocation, building.coalCost, building.ironCost, self.money-building.cost
+                buildLocation, building
             )
             and self.canAffordBuilding(building)
             and self.canPlaceBuilding(building, buildLocation)
