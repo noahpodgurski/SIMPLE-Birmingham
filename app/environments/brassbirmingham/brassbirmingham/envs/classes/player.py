@@ -26,12 +26,14 @@ from .buildings.building import Building
 from .buildings.market_building import MarketBuilding
 from .road_location import RoadLocation
 
+PLAYER_COLORS = ["Red", "Blue", "Green", "Yellow"]
 
 class Player:
     def __init__(self, name: str, board: Board):
         self.id = id()
         self.name = name
         self.board = board
+        self.color = PLAYER_COLORS[len(self.board.players)]
         self.hand = Hand(self.board.deck)
         self.money = STARTING_MONEY
         self.income = 10
@@ -42,9 +44,21 @@ class Player:
         )  # buildings, array of Building objects
         for building in self.buildings:
             building.addOwner(self)
+        self.buildingDict = {}
 
         self.roadCount = STARTING_ROADS
         self.board.addPlayer(self)
+
+        for building in self.buildings:
+            self.buildingDict[f"{building.name.value} {building.tier}"] = building
+
+    """
+    pay - use instead of 'player.money -= amount' since this asserts no negative values
+    :param int: amount to pay
+    """
+    def pay(self, amount: int):
+        self.money -= amount
+        assert self.money >= 0
 
     def incomeLevel(self):
         if self.income <= 10:
@@ -90,18 +104,38 @@ class Player:
         for _ in range(levels):
             decreaseLevel()
 
+    # pass "money" object (money remaining after spending on building cost)
     def canAffordBuildingIndustryResources(
-        self, buildLocation: BuildLocation, coalCost: int, ironCost: int
+        self, buildLocation: BuildLocation, building: Building
     ) -> bool:
-        return (
-            self.board.isCoalAvailableFromBuildings(buildLocation.town)
-            or self.board.isCoalAvailableFromTradePosts(
-                buildLocation.town, coalCost, self.money
+        canAffordCoal = True
+        canAffordIron = True
+        moneyRemaining = self.money - building.cost
+        if building.coalCost > 0:
+            #first check if that amount is available
+            canAffordCoal = (
+                self.board.isCoalAvailableFromBuildings(buildLocation.town)
+                or self.board.isCoalAvailableFromTradePosts(
+                    buildLocation.town, building.coalCost, moneyRemaining
+                )
+            ) and (
+                self.board.isIronAvailableFromBuildings()
+                or self.board.isIronAvailableFromTradePosts(building.ironCost, moneyRemaining)
             )
-        ) and (
-            self.board.isIronAvailableFromBuildings()
-            or self.board.isIronAvailableFromTradePosts(ironCost, self.money)
-        )
+
+        if building.ironCost > 0:
+            #first check if that amount is available
+            canAffordIron = (
+                self.board.isIronAvailableFromBuildings()
+                or self.board.isIronAvailableFromTradePosts(
+                    building.ironCost, moneyRemaining
+                )
+            ) and (
+                self.board.isIronAvailableFromBuildings()
+                or self.board.isIronAvailableFromTradePosts(building.ironCost, moneyRemaining)
+            )
+
+        return canAffordCoal and canAffordIron
 
     def canAffordBuilding(self, building: Building) -> bool:
         return self.money >= building.cost
@@ -131,9 +165,11 @@ class Player:
     def canPlaceCanal(self, roadLocation: RoadLocation) -> bool:
         return self.board.era == Era.canal and not roadLocation.isBuilt and roadLocation.canBuildCanal
 
-    def canAffordOneRailroadIndustryResources(self) -> bool:
-        return self.board.getAvailableCoalAmount() >= ONE_RAILROAD_COAL_PRICE
-        # return self.board.isCoalAvailableFromBuildings(roadLocation.town) or self.board.isCoalAvailableFromTradePosts(roadLocation.town, ONE_RAILROAD_COAL_PRICE, self.money)
+    def canAffordOneRailroadIndustryResources(self, roadLocation: RoadLocation) -> bool:
+        for town in roadLocation.towns:
+            if self.board.getAvailableCoalAmount(town) >= ONE_RAILROAD_COAL_PRICE:
+                return True
+        return False
 
     def canAffordOneRailroad(self) -> bool:
         return self.money >= ONE_RAILROAD_PRICE
@@ -144,21 +180,37 @@ class Player:
     def canAffordTwoRailroadIndustryResources(
         self, roadLocation1: RoadLocation, roadLocation2: RoadLocation
     ) -> bool:
-        # todo - or for now, but may be incorrect
-        return (
-            self.board.getAvailableCoalAmount(roadLocation1) >= TWO_RAILROAD_COAL_PRICE
-            and self.board.getAvailableBeerAmount(self, roadLocation2)
-            >= TWO_RAILROAD_BEER_PRICE
-            or self.board.getAvailableCoalAmount(roadLocation2)
-            >= TWO_RAILROAD_COAL_PRICE
-            and self.board.getAvailableBeerAmount(self, roadLocation2)
-            >= TWO_RAILROAD_BEER_PRICE
-        )
+        # FIXED issue - building second road X - 1 - 2, '2' isn't "networked" to X I think?
+        # def fix second road - go one at a time func
+        road1 = False
+        road2 = False
+        for town in roadLocation1.towns:
+            if self.board.getAvailableCoalAmount(town) >= TWO_RAILROAD_COAL_PRICE and self.board.getAvailableBeerAmount(self, town) >= TWO_RAILROAD_BEER_PRICE:
+                road1 = True
+                # build tmp road (delete after)
+                roadLocation1.isBuilt = True
+                break
+        if road1:
+            for town in roadLocation2.towns:
+                if self.board.getAvailableCoalAmount(town) >= TWO_RAILROAD_COAL_PRICE and self.board.getAvailableBeerAmount(self, town) >= TWO_RAILROAD_BEER_PRICE:
+                    roadLocation1.isBuilt = False
+                    return True
 
-        # return (self.board.isCoalAvailableFromBuildings(roadLocation1.town) or self.board.isCoalAvailableFromTradePosts(roadLocation1.town, TWO_RAILROAD_COAL_PRICE, self.money)) and (self.board.isBeerAvailableFromBuildings(roadLocation1.town) or self.board.isBeerAvailableFromTradePosts(roadLocation1.town))\
-        #         or\
-        #         (self.board.isCoalAvailableFromBuildings(roadLocation2.town) or self.board.isCoalAvailableFromTradePosts(roadLocation2.town, TWO_RAILROAD_COAL_PRICE, self.money)) and (self.board.isBeerAvailableFromBuildings(roadLocation2.town) or self.board.isBeerAvailableFromTradePosts(roadLocation1.town))
-
+        for town in roadLocation2.towns:
+            if self.board.getAvailableCoalAmount(town) >= TWO_RAILROAD_COAL_PRICE and self.board.getAvailableBeerAmount(self, town) >= TWO_RAILROAD_BEER_PRICE:
+                road2 = True
+                # build tmp road (delete after)
+                roadLocation2.isBuilt = True
+                break
+        
+        if road2:
+            for town in roadLocation1.towns:
+                if self.board.getAvailableCoalAmount(town) >= TWO_RAILROAD_COAL_PRICE and self.board.getAvailableBeerAmount(self, town) >= TWO_RAILROAD_BEER_PRICE:
+                    roadLocation2.isBuilt = False
+                    return True
+            
+        return False
+    
     def canAffordTwoRailroads(self) -> bool:
         return self.money >= TWO_RAILROAD_PRICE
 
@@ -189,9 +241,14 @@ class Player:
                     if buildLocation_.building and buildLocation_.building.owner.id == self.id:
                         return False
 
+        print(
+            self.canAffordBuildingIndustryResources(
+                buildLocation, building
+            ), self.canAffordBuilding(building), self.canPlaceBuilding(building, buildLocation), building.owner == self
+        )
         return (
             self.canAffordBuildingIndustryResources(
-                buildLocation, building.coalCost, building.ironCost
+                buildLocation, building
             )
             and self.canAffordBuilding(building)
             and self.canPlaceBuilding(building, buildLocation)
@@ -211,7 +268,7 @@ class Player:
             self.roadCount > 0
             and self.canAffordOneRailroad()
             and self.canPlaceOneRailroad(roadLocation)
-            and self.canAffordOneRailroadIndustryResources()
+            and self.canAffordOneRailroadIndustryResources(roadLocation)
         )
 
     def canBuildTwoRailroads(
@@ -270,6 +327,10 @@ class Player:
     # 1 BUILD
     def buildBuilding(self, building: Building, buildLocation: BuildLocation):
         assert self.canBuildBuilding(building, buildLocation)
+        # if overbuilding
+        if buildLocation.building:
+            buildLocation.building.isActive = False
+            buildLocation.building.isRetired = True
         building.build(buildLocation)
         self.board.buildBuilding(building, buildLocation, self)
 

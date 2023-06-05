@@ -2,7 +2,7 @@ from typing import Dict, List
 
 from classes.build_location import BuildLocation
 from classes.buildings.building import Building
-from classes.buildings.enums import BuildingName
+from classes.buildings.enums import BuildingName, MerchantName
 from classes.buildings.industry_building import IndustryBuilding
 from classes.buildings.market_building import MarketBuilding
 from classes.cards.card import Card
@@ -20,7 +20,7 @@ ONE_RAILROAD_PRICE = 5
 ONE_RAILROAD_COAL_PRICE = 1
 TWO_RAILROAD_PRICE = 15
 TWO_RAILROAD_COAL_PRICE = 2
-TWO_RAILROAD_BEER_PRICE = 2
+TWO_RAILROAD_BEER_PRICE = 1
 MAX_MARKET_COAL = 14
 MAX_MARKET_IRON = 10
 STARTING_HAND_SIZE = 8
@@ -56,6 +56,37 @@ NOTTINGHAM = "Nottingham"
 SHREWBURY = "Shrewbury"
 OXFORD = "Oxford"
 GLOUCESTER = "Gloucester"
+
+# merchant tiles
+MERCHANT_TILES = {
+    "2": [
+        MerchantName.all,
+        MerchantName.blank,
+        MerchantName.blank,
+        MerchantName.cotton,
+        MerchantName.goods,
+    ],
+    "3": [
+        MerchantName.all,
+        MerchantName.blank,
+        MerchantName.blank,
+        MerchantName.blank,
+        MerchantName.cotton,
+        MerchantName.pottery,
+        MerchantName.goods,
+    ],
+    "4": [
+        MerchantName.all,
+        MerchantName.blank,
+        MerchantName.blank,
+        MerchantName.blank,
+        MerchantName.cotton,
+        MerchantName.cotton,
+        MerchantName.pottery,
+        MerchantName.goods,
+        MerchantName.goods,
+    ]
+}
 
 TOWNS: List[Town] = [
     Town(
@@ -125,7 +156,7 @@ TOWNS: List[Town] = [
             BuildLocation([BuildingName.beer]),
         ],
     ),
-    Town(BEER1, "", [BuildLocation([BuildingName.beer])]),
+    Town(BEER1, BEER1, [BuildLocation([BuildingName.beer])]),
     Town(
         "red",
         "Cannock",
@@ -180,7 +211,7 @@ TOWNS: List[Town] = [
             BuildLocation([BuildingName.cotton]),
         ],
     ),
-    Town(BEER2, "", [BuildLocation([BuildingName.beer])]),
+    Town(BEER2, BEER2, [BuildLocation([BuildingName.beer])]),
     Town(
         "yellow",
         WORCESTER,
@@ -223,13 +254,27 @@ TOWNS: List[Town] = [
     ),
 ]
 
-TRADEPOSTS: List[TradePost] = [
-    TradePost(WARRINGTON, 2, 5, 0, 0, 2, False),
-    TradePost(NOTTINGHAM, 2, 0, 3, 0, 2, False),
-    TradePost(SHREWBURY, 1, 0, 4, 0, 2, False),
-    TradePost(OXFORD, 2, 0, 0, 2, 2, False),
-    TradePost(GLOUCESTER, 2, 0, 0, 2, 2, True),
-]
+
+TRADEPOSTS: Dict[int, List[TradePost]] = {
+    "2": [
+        TradePost(SHREWBURY, 1, 0, 4, 0, 2, False),
+        TradePost(OXFORD, 2, 0, 0, 2, 2, False),
+        TradePost(GLOUCESTER, 2, 0, 0, 2, 2, True),
+    ],
+    "3": [
+        TradePost(SHREWBURY, 1, 0, 4, 0, 2, False),
+        TradePost(OXFORD, 2, 0, 0, 2, 2, False),
+        TradePost(GLOUCESTER, 2, 0, 0, 2, 2, True),
+        TradePost(WARRINGTON, 2, 5, 0, 0, 2, False),
+    ],
+    "4": [
+        TradePost(SHREWBURY, 1, 0, 4, 0, 2, False),
+        TradePost(OXFORD, 2, 0, 0, 2, 2, False),
+        TradePost(GLOUCESTER, 2, 0, 0, 2, 2, True),
+        TradePost(WARRINGTON, 2, 5, 0, 0, 2, False),
+        TradePost(NOTTINGHAM, 2, 0, 3, 0, 2, False),
+    ]
+}
 
 ROAD_LOCATIONS: List[RoadLocation] = [
     RoadLocation([WARRINGTON, STOKE_ON_TRENT]),
@@ -257,9 +302,8 @@ ROAD_LOCATIONS: List[RoadLocation] = [
     RoadLocation([WOLVERHAMPTON, WALSALL]),
     RoadLocation([WOLVERHAMPTON, DUDLEY]),
     RoadLocation([TAMWORTH, WALSALL], False),
-    RoadLocation([NUNEATON, WALSALL]),
+    RoadLocation([TAMWORTH, NUNEATON]),
     RoadLocation([NUNEATON, COVENTRY]),
-    RoadLocation([CANNOCK, WALSALL]),
     RoadLocation([BIRMINGHAM, WALSALL]),
     RoadLocation([BIRMINGHAM, TAMWORTH]),
     RoadLocation([BIRMINGHAM, NUNEATON], False),
