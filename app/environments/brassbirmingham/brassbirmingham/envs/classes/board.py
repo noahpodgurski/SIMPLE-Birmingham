@@ -24,6 +24,7 @@ from .roads.canal import Canal
 from .roads.railroad import Railroad
 from .town import Town
 from .trade_post import TradePost
+import random
 
 if TYPE_CHECKING:
     from .player import Player
@@ -45,14 +46,17 @@ class Board:
         self.roadLocations = copy.deepcopy(ROAD_LOCATIONS)
         self.players: List[Player] = []  # array of Player objects
 
+        #connect class objs
         for town in self.towns:
             town.addBoard(self)  # ref board to towns
 
+        # make dicts for easy indexing
         for town in self.towns:
             self.townDict[town.name] = town
 
         for tradePost in self.tradePosts:
             self.tradePostDict[tradePost.name] = tradePost
+
         # network towns together
         for town in self.towns:
             for roadLocation in self.roadLocations:
@@ -62,6 +66,11 @@ class Board:
             for roadLocation in self.roadLocations:
                 if tradePost.name in roadLocation.networks:
                     tradePost.addRoadLocation(roadLocation)
+
+        # randomize merchant tiles
+        for tradePost in self.tradePosts:
+            tradePost.addMerchantTile(self.merchantTiles.pop(random.randint(0, len(self.merchantTiles)-1)))
+
 
     """
     addPlayer

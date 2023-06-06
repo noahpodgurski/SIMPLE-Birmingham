@@ -52,6 +52,6 @@ class IndustryBuilding(Building):
 
     def decreaseResourceAmount(self, amount: int):
         assert amount <= self.resourceAmount
-        self.resourceAmount -= amount
+        self.resourceAmount = max(self.resourceAmount - amount, 0)
 
         self.isFlipped = self.resourceAmount == 0

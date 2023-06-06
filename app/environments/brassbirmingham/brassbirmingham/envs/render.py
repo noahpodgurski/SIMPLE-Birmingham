@@ -171,7 +171,7 @@ class Render:
 		rect = Rect(5, 5, 100, 100)
 		pygame.draw.rect(self.win, WHITE, rect)
 		for player in self.board.players:
-			img = font.render(f"{player.name}: ${player.money}", True,  PLAYER_COLOR_MAP[player.color])
+			img = font.render(f"{player.name}: ${player.money} {self.board.getVictoryPoints()[player]}", True,  PLAYER_COLOR_MAP[player.color])
 			self.win.blit(img, (x, y))
 			y += 20
 
@@ -203,12 +203,12 @@ class Render:
 				self.win.blit(img, (x-23, y))
 
 	def drawRoads(self):
-		for i, road in enumerate(self.board.roadLocations):
-			if road.isBuilt:
+		for i, roadLocation in enumerate(self.board.roadLocations):
+			if roadLocation.isBuilt:
 				coords = ROAD_LOCATION_COORDS[i]
 				x, y = coords
-
-				pygame.draw.circle(self.win, PLAYER_COLOR_MAP[road.road.owner.color], coords, 10)
+				# print(roadLocation)
+				pygame.draw.circle(self.win, PLAYER_COLOR_MAP[roadLocation.road.owner.color], coords, 10)
 				# if i % 2 == 0:
 				# 	img = font.render(f"{road.towns[0].name}, {road.towns[1].name}", True, WHITE)
 				# else:
@@ -240,7 +240,7 @@ class Render:
 			textColor = WHITE
 
 		pygame.draw.rect(self.win, color, rect)
-		img = font.render(f"{buildLocation.building.name.value}", True, textColor)
+		img = font.render(f"{buildLocation.building.name.value} {buildLocation.building.tier}", True, textColor)
 		self.win.blit(img, (x-23, y-10))
 
 	def drawCoal(self):
@@ -298,8 +298,8 @@ class Render:
 				
 			startX = x
 
-			print(building)
-			print(building.resourcesType.name)
+			# print(building)
+			# print(building.resourcesType.name)
 			assert building.resourcesType.name == "iron"
 			for i in range(building.resourceAmount):
 				if i > 0 and i % 3 == 0:

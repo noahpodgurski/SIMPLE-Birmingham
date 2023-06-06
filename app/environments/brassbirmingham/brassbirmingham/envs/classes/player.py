@@ -241,11 +241,6 @@ class Player:
                     if buildLocation_.building and buildLocation_.building.owner.id == self.id:
                         return False
 
-        print(
-            self.canAffordBuildingIndustryResources(
-                buildLocation, building
-            ), self.canAffordBuilding(building), self.canPlaceBuilding(building, buildLocation), building.owner == self
-        )
         return (
             self.canAffordBuildingIndustryResources(
                 buildLocation, building
@@ -258,14 +253,16 @@ class Player:
     # 2 NETWORK
     def canBuildCanal(self, roadLocation: RoadLocation) -> bool:
         return (
-            self.roadCount > 0
+            self.board.era == Era.canal
+            and self.roadCount > 0
             and self.canAffordCanal()
             and self.canPlaceCanal(roadLocation)
         )
 
     def canBuildOneRailroad(self, roadLocation: RoadLocation) -> bool:
         return (
-            self.roadCount > 0
+            self.board.era == Era.railroad
+            and self.roadCount > 0
             and self.canAffordOneRailroad()
             and self.canPlaceOneRailroad(roadLocation)
             and self.canAffordOneRailroadIndustryResources(roadLocation)
@@ -275,23 +272,53 @@ class Player:
         self, roadLocation1: RoadLocation, roadLocation2: RoadLocation
     ) -> bool:
         return (
-            self.roadCount > 1
+            self.board.era == Era.railroad
+            and self.roadCount > 1
             and self.canAffordTwoRailroads()
             and self.canAffordTwoRailroadIndustryResources(roadLocation1, roadLocation2)
             and self.canPlaceTwoRailroads(roadLocation1, roadLocation2)
         )
 
     # 3 DEVELOP
-    def canDevelop(self, building1: Building, building2: Building) -> bool:
+    def canDevelopOne(self, building: Building) -> bool:
+        return (
+            not building.isActive
+            and not building.isRetired
+            and building.canBeDeveloped
+            and building.owner == self
+            #can afford 1 iron per building
+            and (
+                self.board.isIronAvailableFromBuildings()
+                or self.board.isIronAvailableFromTradePosts(
+                    1, self.money
+                )
+            )
+        )
+    
+    def canDevelopTwo(self, building1: Building, building2: Building) -> bool:
         return (
             not building1.isActive
             and not building1.isRetired
             and building1.canBeDeveloped
             and building1.owner == self
+            #can afford 1 iron per building
+            and (
+                self.board.isIronAvailableFromBuildings()
+                or self.board.isIronAvailableFromTradePosts(
+                    1, self.money
+                )
+            )
             and not building2.isActive
             and not building2.isRetired
             and building2.canBeDeveloped
             and building2.owner == self
+            #can afford 1 iron per building
+            and (
+                self.board.isIronAvailableFromBuildings()
+                or self.board.isIronAvailableFromTradePosts(
+                    1, self.money
+                )
+            )
         )
 
     # 4 SELL
@@ -301,6 +328,16 @@ class Player:
             and building.owner == self
             and self.canAffordSellBuilding(building)
         )
+    
+    def canSellMultiple(self, buildings: list[MarketBuilding]) -> bool:
+        for building in buildings:
+            if not (
+                building.isActive
+                and building.owner == self
+                and self.canAffordSellBuilding(building)
+            ):
+                return False
+        return True
 
     # 5 LOAN
     def canLoan(self) -> bool:
@@ -350,8 +387,12 @@ class Player:
         self.board.buildTwoRailroads(roadLocation1, roadLocation2, self)
 
     # 3 DEVELOP
-    def develop(self, building1: Building, building2: Building):
-        assert self.canDevelop(building1, building2)
+    def developOne(self, building1: Building):
+        assert self.canDevelopOne(building1)
+        building1.isRetired = True
+
+    def developTwo(self, building1: Building, building2: Building):
+        assert self.canDevelopTwo(building1, building2)
         building1.isRetired = True
         building2.isRetired = True
 
@@ -359,6 +400,11 @@ class Player:
     def sell(self, building: MarketBuilding):
         assert self.canSell(building)
         self.board.sellBuilding(building, self)
+
+    def sellMultiple(self, buildings: list[MarketBuilding]):
+        assert self.canSellMultiple(buildings)
+        for building in buildings:
+            self.board.sellBuilding(building, self)
 
     # 5 LOAN
     def loan(self):
