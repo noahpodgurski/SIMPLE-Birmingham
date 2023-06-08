@@ -60,7 +60,7 @@ class Player:
         self.money -= amount
         assert self.money >= 0
     def isCardInHand(self, card: Card):
-        for c in self.hand.cards:
+        return card.id in [_card.id for _card in self.hand.cards]
             if c.id == card.id:
                 return True
         return False
