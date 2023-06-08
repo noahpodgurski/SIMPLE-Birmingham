@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 import copy
 import math
 
-from classes.buildings.enums import BuildingType, BuildingName
+from classes.buildings.enums import BuildingType
 from classes.cards.card import Card
 from classes.cards.enums import CardName, CardType
 from classes.enums import Era
@@ -18,7 +18,7 @@ from classes.hand import Hand
 from consts import (BUILDINGS, CANAL_PRICE, ONE_RAILROAD_COAL_PRICE,
                     ONE_RAILROAD_PRICE, STARTING_MONEY,
                     STARTING_ROADS, TWO_RAILROAD_BEER_PRICE,
-                    TWO_RAILROAD_COAL_PRICE, TWO_RAILROAD_PRICE)
+                    TWO_RAILROAD_COAL_PRICE, TWO_RAILROAD_PRICE, CARD_NAME_TO_BUILDING_NAME)
 from python.id import id
 
 from .build_location import BuildLocation
@@ -61,9 +61,6 @@ class Player:
         assert self.money >= 0
     def isCardInHand(self, card: Card):
         return card.id in [_card.id for _card in self.hand.cards]
-            if c.id == card.id:
-                return True
-        return False
 
     def incomeLevel(self):
         if self.income <= 10:
@@ -265,16 +262,9 @@ class Player:
             and building.owner == self and self.isCardInHand(discard)):
             return False
 
-        cardNameToBuildingName = {
-            CardName.iron_works: BuildingName.iron,
-            CardName.coal_mine: BuildingName.coal,
-            CardName.brewery: BuildingName.beer,
-            CardName.pottery: BuildingName.pottery,
-            CardName.man_goods_or_cotton: BuildingName.goods,
-        }
         if discard.type == CardType.location and (discard.name == buildLocation.town.name or discard.isWild):
             return True
-        elif discard.type == CardType.industry and (cardNameToBuildingName.get(discard.name) == building.name or discard.isWild):
+        elif discard.type == CardType.industry and (CARD_NAME_TO_BUILDING_NAME.get(discard.name) == building.name or discard.isWild):
             return True
                
         return False

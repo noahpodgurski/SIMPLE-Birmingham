@@ -542,3 +542,11 @@ STARTING_CARDS: Dict[str, List[Card]] = {
         IndustryCard(CardName.brewery),
     ],
 }
+
+CARD_NAME_TO_BUILDING_NAME = {
+    CardName.iron_works: BuildingName.iron,
+    CardName.coal_mine: BuildingName.coal,
+    CardName.brewery: BuildingName.beer,
+    CardName.pottery: BuildingName.pottery,
+    CardName.man_goods_or_cotton: BuildingName.goods,
+}
